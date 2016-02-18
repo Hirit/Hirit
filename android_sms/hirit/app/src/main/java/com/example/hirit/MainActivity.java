@@ -49,7 +49,8 @@ public class MainActivity extends AppCompatActivity {
         String sms = "";
         Log.d("onCreate()", "list view");
         while (cur.moveToNext()) {
-            sms += "From :" + cur.getString(2) + " : " + cur.getString(11) + "\n";
+            Log.d("onCreate()", "From :" + cur.getString(cur.getColumnIndexOrThrow("address")) + " : " + cur.getString(cur.getColumnIndexOrThrow("body")) + "\n");
+            // sms += "From :" + cur.getString(cur.getColumnIndexOrThrow("address")) + " : " + cur.getString(cur.getColumnIndexOrThrow("body")) + "\n";
         }
         view.setText(sms);
         setContentView(view);
