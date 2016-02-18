@@ -134,20 +134,20 @@ public class MainActivity extends Activity {
 		String[] murls = new String[j];
 		long[] date=new long[j];
 		mCur.moveToFirst();
-		int i=j-1;
+		int i=0;
 
-		if (mCur.moveToFirst() && mCur.getCount() > 0) {
+		if (mCur.moveToLast() && mCur.getCount() > 0) {
 			int titleIdx = mCur.getColumnIndex(Browser.BookmarkColumns.TITLE);
 			int urlIdx = mCur.getColumnIndex(Browser.BookmarkColumns.URL);
 			int dateIdx=mCur.getColumnIndex(Browser.BookmarkColumns.DATE);
 
-			while (mCur.isAfterLast() == false ) {
+			while (mCur.isBeforeFirst() == false ) {
 				mTitles[i]=mCur.getString(titleIdx);
 				murls[i]=mCur.getString(urlIdx);
 				date[i]=mCur.getLong(dateIdx);
 				Log.v("history", mTitles[i] + "	" + murls[i] + "	" + getDate(date[i], "yyyy/MM/dd hh:mm"));
-				i--;
-				mCur.moveToNext();
+				i++;
+				mCur.moveToPrevious();
 			}
 		}
 	}
