@@ -1,19 +1,24 @@
 package com.example.hirit;
 
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ListAdapter;
-import android.widget.ListView;
-import android.database.Cursor;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
+
+    BroadcastReceiver smsReceiver = new SmsReceiver();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,8 +36,30 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // my code
-        
+        // my code 1. sms receiver
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        intentFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        registerReceiver(smsReceiver, intentFilter);
+        Log.d("onCreate()", "BroadcastReceiver 등록.");
+
+        // my code 2. sms list view
+        TextView view = new TextView(this);
+        Uri uri = Uri.parse("content://sms/inbox");
+        Cursor cur = getContentResolver().query(uri, null, null, null,null);
+        String sms = "";
+        Log.d("onCreate()", "list view");
+        while (cur.moveToNext()) {
+            sms += "From :" + cur.getString(2) + " : " + cur.getString(11) + "\n";
+        }
+        view.setText(sms);
+        setContentView(view);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(smsReceiver);
+        Log.d("onDestory()","BroadcastReceiver 해제.");
     }
 
     @Override
