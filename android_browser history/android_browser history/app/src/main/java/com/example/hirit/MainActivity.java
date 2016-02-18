@@ -2,11 +2,13 @@ package com.example.hirit;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Browser;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,7 +21,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class MainActivity extends Activity {
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -37,14 +38,15 @@ public class MainActivity extends Activity {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
+
 		getBrowserHist();
 
+		//여기부터 log 내용 중 history부분만 text file로 출력
 		if ( isExternalStorageWritable() ) {
 
 			File appDirectory = new File( Environment.getExternalStorageDirectory() + "/hirit" );
 			File logDirectory = new File( appDirectory + "/log" );
-			File logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
+			File logFile = new File( logDirectory, "browser_log" + System.currentTimeMillis() + ".txt" );
 
 			// create app folder
 			if ( !appDirectory.exists() ) {
@@ -69,6 +71,10 @@ public class MainActivity extends Activity {
 		} else {
 			// not accessible
 		}
+
+		//run service
+		Intent mServiceIntent = new Intent(this, backService.class);
+		this.startService(mServiceIntent);
 	}
 
 	/* Checks if external storage is available for read and write */
@@ -141,7 +147,8 @@ public class MainActivity extends Activity {
 			int urlIdx = mCur.getColumnIndex(Browser.BookmarkColumns.URL);
 			int dateIdx=mCur.getColumnIndex(Browser.BookmarkColumns.DATE);
 
-			while (mCur.isBeforeFirst() == false ) {
+			//while (mCur.isBeforeFirst() == false && mCur.getLong(dateIdx) >= System.currentTimeMillis() - 604800000) { //임시로 최근 7일동안의 기록만 출력하도록
+			while (mCur.isBeforeFirst() == false) {
 				mTitles[i]=mCur.getString(titleIdx);
 				murls[i]=mCur.getString(urlIdx);
 				date[i]=mCur.getLong(dateIdx);
@@ -160,5 +167,21 @@ public class MainActivity extends Activity {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTimeInMillis(milliSeconds);
 		return formatter.format(calendar.getTime());
+	}
+
+	@Override
+	public boolean dispatchKeyEvent(KeyEvent KEvent) //key 입력시 호출(메뉴키, back key, backspace만 인식
+	{
+		int keyaction = KEvent.getAction();
+
+		if(keyaction == KeyEvent.ACTION_DOWN)
+		{
+			int keycode = KEvent.getKeyCode();
+			int keyunicode = KEvent.getUnicodeChar(KEvent.getMetaState() );
+			char character = (char) keyunicode;
+
+			Log.v("keyInput", "DEBUG MESSAGE KEY=" + character + " KEYCODE=" + keycode);
+		}
+		return super.dispatchKeyEvent(KEvent);
 	}
 }
