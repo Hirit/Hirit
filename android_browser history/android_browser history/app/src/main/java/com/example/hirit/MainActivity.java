@@ -1,10 +1,5 @@
 package com.example.hirit;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import android.app.Activity;
 import android.app.Fragment;
 import android.database.Cursor;
@@ -17,6 +12,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class MainActivity extends Activity {
 
@@ -127,17 +127,6 @@ public class MainActivity extends Activity {
 
 	@SuppressWarnings("deprecation")
 	public void getBrowserHist()  {
-		/*Cursor mCur = managedQuery(Browser.BOOKMARKS_URI,
-				Browser.HISTORY_PROJECTION, null, null, null);
-		mCur.moveToLast();
-		if (mCur.moveToLast() && mCur.getCount() > 0) {
-			//while (mCur.isAfterLast() == false) {
-			Log.v("titleIdx", mCur
-					.getString(Browser.HISTORY_PROJECTION_TITLE_INDEX));
-			Log.v("urlIdx", mCur.getString(Browser.HISTORY_PROJECTION_URL_INDEX));
-			//mCur.moveToNext();
-			//}
-		}*/
 		String sel = Browser.BookmarkColumns.BOOKMARK + " = 0";
 		Cursor mCur = managedQuery(Browser.BOOKMARKS_URI, Browser.HISTORY_PROJECTION, sel, null, null);
 		int j = mCur.getCount();
@@ -156,10 +145,20 @@ public class MainActivity extends Activity {
 				mTitles[i]=mCur.getString(titleIdx);
 				murls[i]=mCur.getString(urlIdx);
 				date[i]=mCur.getLong(dateIdx);
-				Log.v("history", mTitles[i] + "	" + murls[i] + "	" + date[i]);
+				Log.v("history", mTitles[i] + "	" + murls[i] + "	" + getDate(date[i], "yyyy/MM/dd hh:mm"));
 				i--;
 				mCur.moveToNext();
 			}
 		}
+	}
+	public static String getDate(long milliSeconds, String dateFormat)
+	{
+		// Create a DateFormatter object for displaying date in specified format.
+		SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+
+		// Create a calendar object that will convert the date and time value in milliseconds to date.
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(milliSeconds);
+		return formatter.format(calendar.getTime());
 	}
 }
