@@ -1,13 +1,17 @@
 package com.example.wefit.applog;
 
+import android.app.ActivityManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -66,6 +70,8 @@ public class LogService extends Service {
         msg.arg1 = startId;
         mServiceHandler.sendMessage(msg);
 
+        appLog(this);
+
         // If we get killed, after returning from here, restart
         return START_STICKY;
     }
@@ -79,5 +85,21 @@ public class LogService extends Service {
     @Override
     public void onDestroy() {
         Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+    }
+
+    private void appLog(Context context) {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService( Context.ACTIVITY_SERVICE );
+        PackageManager pm = context.getPackageManager();
+        ActivityManager.RunningAppProcessInfo appProcess = activityManager.getRunningAppProcesses().get(0);
+
+        if(appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+            CharSequence c = null;
+            try {
+                c = pm.getApplicationLabel(pm.getApplicationInfo(appProcess.processName, PackageManager.GET_META_DATA));
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+            Log.i("appLog", c.toString());
+        }
     }
 }
