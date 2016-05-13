@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">AppLog</string>
+    <string name="app_name">Wefit</string>
+    <string name="wifi_input_hint">ex) 집, 학교, 식당, ...</string>
 </resources>

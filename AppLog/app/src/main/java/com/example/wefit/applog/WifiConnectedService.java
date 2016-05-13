@@ -1,75 +1,84 @@
 package com.example.wefit.applog;
 
-import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.os.PowerManager;
 import android.os.Process;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Created by Kim Jisun on 2016-04-08.
- * LogService, 1분 단위로 앱 로그 기록
+ * Created by Kim Jisun on 2016-05-13.
+ *  WifiConnectedSrvice, wifi 연결 시 1분 단위로 wifi 연결 로그 기록
  */
-public class LogService extends Service {
+public class WifiConnectedService extends Service {
     private Looper mServiceLooper;
     private ServiceHandler mServiceHandler;
-    private PowerManager powerManager;
+
+    private static final Map<String, String> KEY_PROTOCOLS = new HashMap<String, String>();
+    static {
+        // KEY_PROTOCOLS.put(wifi name, location);
+        KEY_PROTOCOLS.put(null, null);
+
+    }
 
     // Handler that receives messages from the thread
     private final class ServiceHandler extends Handler {
         public ServiceHandler(Looper looper) {
-            super(looper);
-        }
+        super(looper);
+    }
 
         @Override
         public void handleMessage(Message msg) {
             // Normally we would do some work here, like download a file.
             while (true) {
                 synchronized (this) {
-                    if (powerManager.isScreenOn()) {
-                        Log.i("AppLog", "appLog, " + appLog(getApplicationContext()));
-                    }
+                    String ssid = wifiInfo(getApplicationContext());
+                    if (ssid != null) {
 
-                    try {
-                        wait(60 * 1000); // 1000 = 1 seconds
-                    } catch (Exception e) {
+                        Log.i("AppLog", "wifi info, " + ssid);
+
+                        try {
+                            wait(60 * 1000); // 1000 = 1 seconds
+                        } catch (Exception e) {
+                        }
+                    } else {
+                        break;
                     }
                 }
             }
 
             // Stop the service using the startId, so that we don't stop
             // the service in the middle of handling another job
-            // stopSelf(msg.arg1);
+            stopSelf(msg.arg1);
         }
 
-        // appLog, 앱 사용 기록
-        private String appLog(Context context) {
-            ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-            PackageManager pm = context.getPackageManager();
-            ActivityManager.RunningAppProcessInfo appProcess = activityManager.getRunningAppProcesses().get(0);
-
-            if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                CharSequence c = null;
-                try {
-                    c = pm.getApplicationLabel(pm.getApplicationInfo(appProcess.processName, PackageManager.GET_META_DATA));
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
+        // return wifi info, ssid
+        private String wifiInfo(Context context) {
+            String ssid = null;
+            ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            if (networkInfo.isConnected()) {
+                final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+                if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())) {
+                    ssid = connectionInfo.getSSID();
                 }
-
-                // c.toString, 사용 앱 이름
-                return c.toString();
             }
-
-            return null;
+            return ssid;
         }
     }
 
@@ -86,8 +95,6 @@ public class LogService extends Service {
         // Get the HandlerThread's Looper and use it for our Handler
         mServiceLooper = thread.getLooper();
         mServiceHandler = new ServiceHandler(mServiceLooper);
-
-        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
     }
 
     @Override
